@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hunt Análise — Pro Terminal</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070810;
+      --s1: #0c0e1a;
+      --s2: #111425;
+      --s3: #181c30;
+      --border: #1e2338;
+      --border2: #2a2f4a;
+      --gold: #c8922a;
+      --gold2: #f0b93c;
+      --red2: #f06060;
+      --green2: #4dcc90;
+      --text: #d8dbe8;
+      --muted: #5a6080;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 12px 25px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--s1);
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: .12em;
+      color: var(--gold2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 350px 1fr 280px;
+      height: calc(100vh - 50px);
+    }
+
+    .sidebar {
+      background: var(--s1);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .history-panel {
+      background: var(--s1);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sec-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .15em;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 5px;
+    }
+
+    .field-group {
+      margin-bottom: 8px;
+    }
+
+    .field-group label {
+      display: block;
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    select,
+    input,
+    textarea {
+      width: 100%;
+      background: var(--s2);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      padding: 8px 10px;
+      outline: none;
+      transition: border .2s;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: var(--gold);
+    }
+
+    .fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .btn-analyze {
+      width: 100%;
+      background: linear-gradient(135deg, var(--gold) 0%, #a07020 100%);
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      padding: 15px;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      transition: all .2s;
+    }
+
+    .btn-analyze:active {
+      transform: scale(0.98);
+    }
+
+    .btn-analyze:disabled {
+      opacity: 0.5;
+      filter: grayscale(1);
+    }
+
+    .ctx-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .ctx-tag {
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      transition: all .2s;
+    }
+
+    .ctx-tag.active {
+      border-color: var(--gold);
+      color: var(--gold2);
+      background: rgba(200, 146, 42, .15);
+    }
+
+    .analysis-panel {
+      background: var(--bg);
+      overflow-y: auto;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .bias-badge {
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+    }
+
+    .card {
+      background: var(--s2);
+      border: 1px solid var(--border2);
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid var(--gold);
+    }
+
+    .card label {
+      font-size: 10px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .card b {
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      line-height: 1.4;
+      display: block;
+    }
+
+    .block {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      border-top: 1px solid var(--border2);
+    }
+
+    .block h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      color: var(--gold2);
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border2);
+      padding-bottom: 5px;
+    }
+
+    .block p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(216, 219, 232, 0.9);
+    }
+
+    .hist-item {
+      background: var(--s2);
+      border: 1px solid var(--border2);
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .hist-item:hover {
+      border-color: var(--gold);
+      background: var(--s3);
+    }
+
+    .hist-info {
+      font-size: 9px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      margin-top: 5px;
+    }
+
+    .token-mon {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--green2);
+      background: rgba(77, 204, 144, 0.08);
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(77, 204, 144, 0.2);
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="logo">HUNT ANÁLISE <span style="font-size:10px; opacity:0.5; font-family:sans-serif;">v1.5 PRO</span>
+    </div>
+    <div id="cost-monitor" class="token-mon">0 tokens | $0.00000</div>
+  </header>
+  <div class="main">
+    <div class="sidebar">
+      <div>
+        <div class="sec-title">Ativo & Timeframe</div>
+        <div class="fields-grid">
+          <div class="field-group"><label>Par</label><select id="pair"></select></div>
+          <div class="field-group"><label>TF</label><select id="tf">
+              <option>M1</option>
+              <option>M5</option>
+              <option selected>M15</option>
+              <option>H1</option>
+              <option>H4</option>
+              <option>D1</option>
+            </select></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">Indicadores</div>
+        <div class="fields-grid">
+          <div class="field-group"><label>Preço</label><input type="number" id="price"></div>
+          <div class="field-group"><label>RSI</label><input type="number" id="rsi"></div>
+          <div class="field-group"><label>Tenkan</label><input type="number" id="tenkan"></div>
+          <div class="field-group"><label>Kijun</label><input type="number" id="kijun"></div>
+          <div class="field-group"><label>Resistência</label><input type="text" id="supply" placeholder="Zonas S/D">
+          </div>
+          <div class="field-group"><label>Suporte</label><input type="text" id="demand" placeholder="Zonas S/D"></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">Contexto & Sinais</div>
+        <div class="ctx-tags" id="ctx-list">
+          <div class="ctx-tag" data-val="Div RSI bear">Div RSI bear</div>
+          <div class="ctx-tag" data-val="Div RSI bull">Div RSI bull</div>
+          <div class="ctx-tag" data-val="Golden cross">Golden cross</div>
+          <div class="ctx-tag" data-val="Death cross">Death cross</div>
+          <div class="ctx-tag" data-val="No suporte">No suporte</div>
+          <div class="ctx-tag" data-val="Na resistência">Na resistência</div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title">Grafico MT5</div> <input type="file" id="img-input" style="font-size:11px;">
+      </div>
+      <button class="btn-analyze" id="btn-analyze" onclick="runAnalysis()">ANALISAR ESTRUTURA →</button>
+    </div>
+    <div class="analysis-panel" id="result-container" style="display:none">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h1 id="res-header" style="font-family:'Bebas Neue'; font-size:45px; letter-spacing:1px;"></h1>
+        <div id="res-bias" class="bias-badge"></div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:15px;">
+        <div class="card"><label>Gatilho de Operação</label><b id="res-entry"></b></div>
+        <div class="card" style="border-left-color:var(--red2)"><label>Invalidação / Stop</label><b id="res-stop"
+            style="color:var(--red2)"></b></div>
+        <div class="card" style="border-left-color:var(--green2)"><label>Alvos / Take Profits</label><b id="res-tp1"
+            style="color:var(--green2)"></b></div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+        <div class="block">
+          <h3>Análise Ichimoku / Ondas</h3>
+          <p id="res-ichi"></p>
+        </div>
+        <div class="block">
+          <h3>Volume / Divergências RSI</h3>
+          <p id="res-div"></p>
+        </div>
+        <div class="block">
+          <h3>Zonas Oferta & Demanda</h3>
+          <p id="res-sd"></p>
+        </div>
+        <div class="block">
+          <h3>Resumo Estratégico</h3>
+          <p id="res-sum"></p>
+        </div>
+      </div>
+      <div class="block" style="border-left: 4px solid var(--gold2); background: var(--bg);">
+        <h3>Visualização Técnica Pro</h3>
+        <div style="position: relative; width: 100%; height: 220px;">
+          <canvas id="viz-canvas" style="width: 100%; height: 100%; border-radius: 4px;"></canvas>
+        </div>
+      </div>
+    </div>
+    <div id="empty-state"
+      style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; opacity:.3;">
+      <div style="font-size:60px; margin-bottom:10px;">📊</div>
+      <b>AGUARDANDO SINAL DO METATRADER</b>
+      <p style="font-size:12px; margin-top:5px;">O sistema abrirá automaticamente com os dados do robô</p>
+    </div>
+    <div class="history-panel">
+      <div class="sec-title">Últimas 50 Analises</div>
+      <input type="text" id="hist-search" placeholder="Buscar ativo..."
+        style="padding:6px; margin-bottom:10px; font-size:10px;">
+      <div id="hist-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+  </div>
+  <script>
+    let imgBase64 = null; let apiKey = "AIzaSyBnUSPx9Afy_JDp6hZQ-OkC7WuMjsepNjE";
+
+    function loadFromURL() {
+      const p = new URLSearchParams(window.location.search);
+      const map = { 'pair': 'pair', 'tf': 'tf', 'price': 'price', 'rsi': 'rsi', 'tenkan': 'tenkan', 'kijun': 'kijun', 'sup': 'demand', 'res': 'supply' };
+      p.forEach((v, k) => {
+        if (k === 'pair') { const el = document.getElementById('pair'); if (![...el.options].some(o => o.value === v)) { const o = document.createElement('option'); o.value = v; o.textContent = v; el.appendChild(o); } el.value = v; }
+        else { const el = document.getElementById(map[k]); if (el) el.value = v; }
+      });
+      const ctx = p.get('ctx') || '';
+      document.querySelectorAll('.ctx-tag').forEach(tag => { if (ctx.toLowerCase().includes(tag.dataset.val.toLowerCase())) tag.classList.add('active'); });
+      loadHistory();
+      if (p.has('pair') && p.has('price')) runAnalysis();
+    }
+    document.addEventListener('DOMContentLoaded', loadFromURL);
+
+    // getWorkingModel removed as runAnalysis now handles fallback explicitly
+
+    async function runAnalysis() {
+      const btn = document.getElementById('btn-analyze'); btn.disabled = true;
+      const statusEl = document.getElementById('empty-state');
+      statusEl.innerHTML = "<b>DETERMINANDO ESTRUTURA...</b>";
+
+      const p = {
+        pair: document.getElementById('pair').value,
+        tf: document.getElementById('tf').value,
+        pr: document.getElementById('price').value,
+        rsi: document.getElementById('rsi').value,
+        tk: document.getElementById('tenkan').value,
+        kj: document.getElementById('kijun').value,
+        sup: document.getElementById('demand').value,
+        res: document.getElementById('supply').value,
+        ctx: [...document.querySelectorAll('.ctx-tag.active')].map(t => t.dataset.val).join(', ')
+      };
+
+      const prompt = `Analista Profissional. Retorne APENAS JSON: { "bias":"BULLISH/BEARISH/NEUTRAL", "entry":"...", "stop":"...", "tp1":"...", "ichimoku":"...", "divergencia":"...", "supply_demand":"...", "resumo":"..." }.
+      DADOS: ${p.pair} ${p.tf}, Preço:${p.pr}, RSI:${p.rsi}, Ichimoku(T:${p.tk},K:${p.kj}), Zonas(S:${p.sup},R:${p.res}), Tags:${p.ctx}.
+      Analise imagem e números técnicos. Seja incisivo.`;
+
+      const req = { contents: [{ parts: [{ text: prompt }] }] };
+      if (imgBase64) req.contents[0].parts.push({ inline_data: { mime_type: "image/png", data: imgBase64 } });
+
+      const modelsToTry = [
+        "models/gemini-flash-latest",
+        "models/gemini-2.0-flash",
+        "models/gemini-1.5-flash", // Tentativa legado se os outros falharem
+        "models/gemini-pro-latest"
+      ];
+
+      let lastError = null;
+      for (const model of modelsToTry) {
+        let retries = 2;
+        while (retries > 0) {
+          try {
+            statusEl.innerHTML = `<b>PROCESSANDO (${model.split('/').pop()})...</b>`;
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(req)
+            });
+            const d = await res.json();
+            if (d.error) {
+              if (d.error.message.includes("high demand") || d.error.code === 429) {
+                console.warn(`Model ${model} overloaded. Retrying...`);
+                retries--;
+                await new Promise(r => setTimeout(r, 2000));
+                continue;
+              }
+              throw new Error(d.error.message);
+            }
+            const j = JSON.parse(d.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/)[0]);
+            render(j, true);
+            if (d.usageMetadata) {
+              const cost = d.usageMetadata.totalTokenCount * (model.includes('pro') ? 0.00000035 : 0.000000075);
+              document.getElementById('cost-monitor').textContent = `${d.usageMetadata.totalTokenCount} tokens | $${cost.toFixed(5)}`;
+            }
+            btn.disabled = false;
+            return; // Success!
+          } catch (e) {
+            console.error(`Error with ${model}:`, e);
+            lastError = e;
+            retries--;
+            if (retries > 0) await new Promise(r => setTimeout(r, 2000));
+          }
+        }
+      }
+
+      alert("Falha na IA após várias tentativas: " + (lastError ? lastError.message : "Desconhecida"));
+      statusEl.innerHTML = "<b>ERRO NA CONEXÃO IA</b><br><small>Tente novamente em instantes</small>";
+      btn.disabled = false;
+    }
+
+    function render(j, save = false) {
+      const pair = document.getElementById('pair').value; const tf = document.getElementById('tf').value;
+      document.getElementById('res-header').textContent = `${pair} · ${tf}`;
+      const bias = j.bias.toUpperCase();
+      document.getElementById('res-bias').textContent = bias;
+      document.getElementById('res-bias').style.background = bias.includes('BULL') ? 'rgba(77,204,144,0.15)' : bias.includes('BEAR') ? 'rgba(240,96,96,0.15)' : 'rgba(90,96,128,0.2)';
+      document.getElementById('res-bias').style.color = bias.includes('BULL') ? 'var(--green2)' : bias.includes('BEAR') ? 'var(--red2)' : 'var(--muted)';
+      document.getElementById('res-entry').textContent = j.entry; document.getElementById('res-stop').textContent = j.stop; document.getElementById('res-tp1').textContent = j.tp1;
+      document.getElementById('res-ichi').textContent = j.ichimoku; document.getElementById('res-div').textContent = j.divergencia;
+      document.getElementById('res-sd').textContent = j.supply_demand; document.getElementById('res-sum').textContent = j.resumo;
+      document.getElementById('empty-state').style.display = 'none'; document.getElementById('result-container').style.display = 'flex';
+      drawViz(j);
+      if (save) saveToHistory(j, pair, tf);
+    }
+
+    function drawViz(j) {
+      const canvas = document.getElementById('viz-canvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.offsetWidth * 2; const h = canvas.offsetHeight * 2;
+      canvas.width = w; canvas.height = h;
+
+      const bias = j.bias.toUpperCase();
+      const isBull = bias.includes('BULL');
+      const color = isBull ? '#4dcc90' : (bias.includes('BEAR') ? '#f06060' : '#5a6080');
+
+      // Fundo e Grade
+      ctx.fillStyle = '#070810'; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#1e2338'; ctx.lineWidth = 1;
+      for (let i = 0; i < 10; i++) { ctx.beginPath(); ctx.moveTo(0, i * h / 5); ctx.lineTo(w, i * h / 5); ctx.stroke(); }
+
+      // Escala Simbolica (Mock de Preço)
+      const parsePrice = (s) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0;
+      const entry = parsePrice(j.entry) || parseFloat(document.getElementById('price').value);
+      const stop = parsePrice(j.stop);
+      const tp = parsePrice(j.tp1);
+      const tk = parseFloat(document.getElementById('tenkan').value);
+      const kj = parseFloat(document.getElementById('kijun').value);
+
+      const prices = [entry, stop, tp, tk, kj].filter(p => p > 0);
+      const maxP = Math.max(...prices) * 1.002;
+      const minP = Math.min(...prices) * 0.998;
+      const diff = maxP - minP || 1;
+      const getP = (p) => h - ((p - minP) / diff * h);
+
+      // Linhas Ichimoku
+      if (tk) { ctx.strokeStyle = '#f06060'; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(0, getP(tk)); ctx.lineTo(w, getP(tk)); ctx.stroke(); ctx.setLineDash([]); }
+      if (kj) { ctx.strokeStyle = '#4dcc90'; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(0, getP(kj)); ctx.lineTo(w, getP(kj)); ctx.stroke(); ctx.setLineDash([]); }
+
+      // Linhas Operacionais
+      const drawLevel = (val, col, txt) => {
+        const y = getP(val);
+        ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w - 100, y); ctx.stroke();
+        ctx.fillStyle = col; ctx.font = '24px DM Sans'; ctx.fillText(`${txt}: ${val.toFixed(2)}`, w - 250, y - 10);
+      };
+
+      if (stop) drawLevel(stop, '#f06060', 'STOP');
+      if (tp) drawLevel(tp, '#4dcc90', 'ALVO');
+      drawLevel(entry, '#c8922a', 'ENTRADA');
+
+      // Seta de Bias
+      ctx.save();
+      ctx.translate(w / 4, h / 2);
+      ctx.fillStyle = color + '33'; ctx.beginPath(); ctx.arc(0, 0, 80, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = color; ctx.lineWidth = 10; ctx.lineJoin = 'round';
+      const arrowY = isBull ? -50 : 50;
+      ctx.beginPath(); ctx.moveTo(0, -arrowY); ctx.lineTo(0, arrowY);
+      ctx.lineTo(-30, arrowY - (isBull ? -40 : 40)); ctx.moveTo(0, arrowY); ctx.lineTo(30, arrowY - (isBull ? -40 : 40));
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = color; ctx.font = 'bold 30px DM Sans'; ctx.fillText(bias, w / 4 - 60, h / 2 + 120);
+    }
+
+    function saveToHistory(j, pair, tf) {
+      let hist = JSON.parse(localStorage.getItem('hunt_history') || '[]');
+      hist.unshift({ id: Date.now(), pair, tf, date: new Date().toLocaleString(), data: j });
+      if (hist.length > 50) hist = hist.slice(0, 50);
+      localStorage.setItem('hunt_history', JSON.stringify(hist));
+      loadHistory();
+    }
+
+    function loadHistory(filter = '') {
+      const container = document.getElementById('hist-list'); container.innerHTML = '';
+      let hist = JSON.parse(localStorage.getItem('hunt_history') || '[]');
+      const now = Date.now(); hist = hist.filter(x => (now - x.id) < (7 * 24 * 60 * 60 * 1000) && x.pair.toLowerCase().includes(filter.toLowerCase()));
+      hist.forEach(x => {
+        const div = document.createElement('div'); div.className = 'hist-item';
+        div.innerHTML = `<b>${x.pair} (${x.tf})</b><div style="font-size:10px; color:${x.data.bias.includes('BULL') ? 'var(--green2)' : 'var(--red2)'}">${x.data.bias}</div><div class="hist-info">${x.date}</div>`;
+        div.onclick = () => { render(x.data); };
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById('hist-search').oninput = e => loadHistory(e.target.value);
+    document.getElementById('img-input').onchange = e => {
+      const f = e.target.files[0]; const reader = new FileReader();
+      reader.onload = ev => { imgBase64 = ev.target.result.split(',')[1]; }; reader.readAsDataURL(f);
+    };
+    document.querySelectorAll('.ctx-tag').forEach(t => t.onclick = () => t.classList.toggle('active'));
+  </script>
+</body>
+
+</html>
