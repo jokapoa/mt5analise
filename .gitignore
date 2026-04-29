@@ -1,0 +1,8 @@
+*.json
+*.zip
+*.ex5
+*.exe
+data.js
+dados.js
+node_modules/
+.DS_Store
